@@ -1,30 +1,3 @@
-/*
- Copyright (c) 2016, Sergey Ilinykh
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL IL'INYKH SERGEY BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include "randommaploader.h"
 #include "tank.h"
 
@@ -35,8 +8,10 @@
 
 namespace Tanks {
 
+// 隨機地圖加載器的構造函數，初始化棋盤的寬度和高度
 RandomMapLoader::RandomMapLoader() : boardWidth(50), boardHeight(50) { }
 
+// 打開地圖加載器，初始化各種地形和物體的隊列
 bool RandomMapLoader::open()
 {
     int i;
@@ -44,51 +19,54 @@ bool RandomMapLoader::open()
     shapesQueue.clear();
     objectQueue.clear();
 
+           // 初始化磚塊
     for (i = 0; i < 20; i++) {
-        // draw bricks
         shapesQueue.enqueue({ Brick, 4, 20 });
     }
 
+           // 初始化混凝土
     for (i = 0; i < 10; i++) {
-        // draw concrete
         shapesQueue.enqueue({ Concrete, 3, 8 });
     }
 
+           // 初始化水域
     for (i = 0; i < 10; i++) {
-        // draw water
         shapesQueue.enqueue({ Water, 3, 8 });
     }
 
+           // 初始化冰面
     for (i = 0; i < 10; i++) {
-        // draw water
         shapesQueue.enqueue({ Ice, 3, 8 });
     }
 
+           // 初始化灌木叢
     for (i = 0; i < 20; i++) {
-        // draw bush
         shapesQueue.enqueue({ Bush, 3, 8 });
     }
     return true;
 }
 
+// 生成隨機形狀的函數
 void RandomMapLoader::generateShape(const PendingShape &shape)
 {
+    // 生成隨機大小和位置
     int rndWidth  = qMax(shape.minSize, QRandomGenerator::global()->bounded(shape.maxSize + 1));
     int rndHeight = qMax(shape.minSize, QRandomGenerator::global()->bounded(shape.maxSize + 1));
     int rndLeft   = QRandomGenerator::global()->bounded(boardWidth) - rndWidth / 2;
     int rndTop    = QRandomGenerator::global()->bounded(boardHeight) - rndHeight / 2;
 
-    int shapeVariant = QRandomGenerator::global()->bounded(6); // with accent to ellipses
+    int shapeVariant = QRandomGenerator::global()->bounded(6); // 偏重於橢圓形
     switch (shapeVariant) {
     case 0:
-        // vertical bar
+        // 垂直條
         objectQueue.enqueue(MapObject { QRect(rndLeft, rndTop, rndWidth, 2), shape.type });
         return;
     case 1:
-        // horizontal bar
+        // 水平條
         objectQueue.enqueue(MapObject { QRect(rndLeft, rndTop, 2, rndHeight), shape.type });
         return;
     case 2:
+        // 其他形狀
         if (shape.type != Brick) {
             objectQueue.enqueue(MapObject { QRect(rndLeft, rndTop, rndWidth, rndHeight), shape.type });
         } else {
@@ -100,7 +78,7 @@ void RandomMapLoader::generateShape(const PendingShape &shape)
         return;
     }
 
-    // comlex shapes left. have to scan them
+           // 處理複雜形狀
     QSize  shapeSize(rndWidth, rndHeight);
     QImage img(shapeSize, QImage::Format_ARGB32);
     img.fill(QColor(Qt::black));
@@ -116,7 +94,7 @@ void RandomMapLoader::generateShape(const PendingShape &shape)
     }
     QRect drawRect(QPoint(0, 0), shapeSize);
 
-    // only ellipse is supported
+           // 目前只支持橢圓形
     painter.drawEllipse(drawRect);
 
     for (int y = 0; y < rndHeight; y++) {
@@ -128,10 +106,13 @@ void RandomMapLoader::generateShape(const PendingShape &shape)
     }
 }
 
+// 獲取棋盤尺寸
 QSize RandomMapLoader::dimensions() const { return QSize(boardWidth, boardHeight); }
 
+// 檢查是否還有更多形狀或物體
 bool RandomMapLoader::hasNext() const { return !shapesQueue.isEmpty() || !objectQueue.isEmpty(); }
 
+// 獲取下一個地圖物體
 MapObject RandomMapLoader::next()
 {
     if (objectQueue.isEmpty()) {
@@ -141,6 +122,7 @@ MapObject RandomMapLoader::next()
     return objectQueue.dequeue();
 }
 
+// 生成敵方坦克
 QList<quint8> RandomMapLoader::enemyTanks() const
 {
     QList<quint8> ret;
@@ -160,17 +142,20 @@ QList<quint8> RandomMapLoader::enemyTanks() const
     return ret;
 }
 
+// 生成敵方坦克的起始位置
 QList<QPoint> RandomMapLoader::enemyStartPositions() const
 {
     return QList<QPoint>() << QPoint(0, 0) << QPoint(boardWidth - 2, 0) << QPoint(boardWidth / 2, 0);
 }
 
+// 生成友軍坦克的起始位置
 QList<QPoint> RandomMapLoader::friendlyStartPositions() const
 {
     return QList<QPoint>() << QPoint(boardWidth / 2 - 5, boardHeight - 2)
                            << QPoint(boardWidth / 2 + 1, boardHeight - 2);
 }
 
+// 生成旗幟的位置
 QPoint RandomMapLoader::flagPosition() const { return QPoint(boardWidth / 2 - 2, boardHeight - 2); }
 
 } // namespace Tanks

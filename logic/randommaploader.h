@@ -1,30 +1,3 @@
-/*
- Copyright (c) 2016, Sergey Ilinykh
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL IL'INYKH SERGEY BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #ifndef TANKS_RANDOMMAPLOADER_H
 #define TANKS_RANDOMMAPLOADER_H
 
@@ -34,17 +7,19 @@
 
 namespace Tanks {
 
+// RandomMapLoader 類，用於隨機生成遊戲地圖
 class RandomMapLoader : public AbstractMapLoader {
-    // abstract shape
+    // PendingShape 結構，代表等待生成的形狀
     struct PendingShape {
-        MapObjectType type;
-        int           minSize;
-        int           maxSize;
+        MapObjectType type; // 形狀的類型
+        int           minSize; // 最小尺寸
+        int           maxSize; // 最大尺寸
     };
 
 public:
     RandomMapLoader();
 
+           // 實現抽象基類的方法
     bool          open();
     QSize         dimensions() const;
     bool          hasNext() const;
@@ -55,13 +30,14 @@ public:
     QPoint        flagPosition() const;
 
 private:
+    // 生成形狀的私有函數
     void generateShape(const PendingShape &shape);
 
 private:
-    int                  boardWidth;
-    int                  boardHeight;
-    QQueue<PendingShape> shapesQueue;
-    QQueue<MapObject>    objectQueue;
+    int                  boardWidth; // 棋盤的寬度
+    int                  boardHeight; // 棋盤的高度
+    QQueue<PendingShape> shapesQueue; // 待生成形狀的隊列
+    QQueue<MapObject>    objectQueue; // 地圖物體的隊列
 };
 
 } // namespace Tanks

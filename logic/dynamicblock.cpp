@@ -1,72 +1,50 @@
-/*
- Copyright (c) 2016, Sergey Ilinykh
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL IL'INYKH SERGEY BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include "dynamicblock.h"
 
 namespace Tanks {
 
+// DynamicBlock 類的構造函數
 DynamicBlock::DynamicBlock(quint8 speed, Direction direction) : _clockPhase(0), _direction(direction)
 {
-    setSpeed(speed);
+    setSpeed(speed); // 設置速度
 }
 
+// 時間流逝的處理函數，控制動態塊的移動能力
 void DynamicBlock::clockTick()
 {
     if (_clockPhase) {
-        _clockPhase--;
+        _clockPhase--; // 時間減少，用於控制移動速度
     }
 }
 
+// 檢查動態塊是否可以移動的函數
 bool DynamicBlock::canMove() const { return _clockPhase == 0; }
 
+// 動態塊的移動函數
 void DynamicBlock::move()
 {
-    int distance = 1;
+    int distance = 1; // 移動距離
     int dx = 0, dy = 0;
     switch (_direction) {
     case North:
-        dy = -distance;
+        dy = -distance; // 向北移動
         break;
     case South:
-        dy = distance;
+        dy = distance; // 向南移動
         break;
     case West:
-        dx = -distance;
+        dx = -distance; // 向西移動
         break;
     case East:
-        dx = distance;
+        dx = distance; // 向東移動
         break;
     }
-    _geometry.translate(dx, dy);
-    _clockPhase = _speed;
+    _geometry.translate(dx, dy); // 更新位置
+    _clockPhase = _speed; // 重設時鐘階段，根據速度
 
-    emit moved();
+    emit moved(); // 發送移動信號
 }
 
+// 獲取動態塊前方移動區域的函數
 QRect DynamicBlock::forwardMoveRect(int distance) const
 {
     switch (_direction) {

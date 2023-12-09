@@ -1,30 +1,3 @@
-/*
- Copyright (c) 2016, Sergey Ilinykh
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL IL'INYKH SERGEY BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #include "humanplayer.h"
 #include "board.h"
 #include "game.h"
@@ -33,29 +6,34 @@
 
 namespace Tanks {
 
+// 人類玩家類的構造函數
 HumanPlayer::HumanPlayer(Game *game, int playerIndex) :
     _game(game), _playerIndex(playerIndex), _lifes(3), _shooting(false)
 {
 }
 
+// 獲取玩家生命值的函數
 int HumanPlayer::lifesCount() const { return _lifes; }
 
+// 開始遊戲時的初始化函數
 void HumanPlayer::start()
 {
     _tank         = QSharedPointer<Tank>(new Tank(Friendly));
     _oldDirection = _tank->direction();
-    moveToStart();
-    emit newTankAvailable();
-    // our handler is the last
+    moveToStart(); // 移動至起始位置
+    emit newTankAvailable(); // 發出新坦克可用的訊號
+    // 連接坦克被摧毀的信號
     connect(_tank.data(), &Tank::tankDestroyed, this, &HumanPlayer::onTankDestroyed);
 }
 
+// 將坦克移動至起始位置的函數
 void HumanPlayer::moveToStart()
 {
     const auto &posList = _game->board()->friendlyStartPositions();
     _tank->setInitialPosition(posList[_playerIndex % posList.count()]);
 }
 
+// 控制移動的函數
 void HumanPlayer::move(Direction dir)
 {
     if (_tank) {
@@ -69,12 +47,12 @@ void HumanPlayer::move(Direction dir)
     }
 }
 
+// 射擊函數
 void HumanPlayer::fire() { _shooting = true; }
 
+// 停止移動的函數
 void HumanPlayer::stop(Direction dir)
 {
-    // we can stop pressing a key, but it does not mean other keys are not pressed
-    // so we have to figure out what's left and continue moving
     _movingDir.erase(std::remove(_movingDir.begin(), _movingDir.end(), dir), _movingDir.end());
     if (!_movingDir.empty()) {
         auto dir = _movingDir.front();
@@ -83,12 +61,14 @@ void HumanPlayer::stop(Direction dir)
     }
 }
 
+// 停止射擊的函數
 void HumanPlayer::stopFire() { _shooting = false; }
 
+// 時間流逝的更新函數
 void HumanPlayer::clockTick()
 {
     if (!_tank) {
-        return; // nothing todo w/o tank
+        return; // 無坦克時不做任何事
     }
     AbstractPlayer::clockTick();
 
@@ -99,7 +79,7 @@ void HumanPlayer::clockTick()
     bool shouldShoot = (_shooting && _tank->canShoot());
 
     if (shouldMove || shouldShoot) {
-        fmr   = _tank->forwardMoveRect(); // space before tank it's going to occupy
+        fmr   = _tank->forwardMoveRect(); // 坦克前方的空間
         props = _game->board()->rectProps(fmr);
     }
 
@@ -107,16 +87,13 @@ void HumanPlayer::clockTick()
         _tank->move();
         _oldDirection = _tank->direction();
     }
-    //    else if (_oldDirection != _tank->direction() && _tank->canMove()) {
-    //        emit moved();
-    //        _oldDirection = _tank->direction();
-    //    }
 
     if (shouldShoot) {
         _tank->fire();
     }
 }
 
+// 坦克被摧毀時的處理函數
 void HumanPlayer::onTankDestroyed()
 {
     if (!_lifes) {
@@ -125,13 +102,14 @@ void HumanPlayer::onTankDestroyed()
     }
     _lifes--;
     if (_lifes) {
-        start();
+        start(); // 重啟遊戲
     } else {
-        _tank.clear();
+        _tank.clear(); // 清除坦克
     }
-    emit lifeLost();
+    emit lifeLost(); // 發出生命損失的訊號
 }
 
+// 摧毀所有的函數
 void HumanPlayer::killAll()
 {
     if (_tank) {

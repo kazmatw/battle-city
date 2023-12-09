@@ -1,30 +1,3 @@
-/*
- Copyright (c) 2016, Sergey Ilinykh
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the <organization> nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL IL'INYKH SERGEY BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #ifndef TANKS_AI_H
 #define TANKS_AI_H
 
@@ -38,37 +11,59 @@ namespace Tanks {
 
 class Game;
 
+// AI 類，繼承自 QObject
 class AI : public QObject {
-    Q_OBJECT
+    Q_OBJECT // 使用 Qt 的訊號與槽機制
 public:
+    // 構造函數，explicit 防止隱式轉換
     explicit AI(Game *game = 0);
+
+           // 析構函數
     ~AI();
-    void                     reset();
-    inline Game             *game() const { return _game; }
-    inline int               pendingTanks() const { return _tanks.count(); }
-    inline int               lifesCount() const { return _tanks.count() + _activePlayers.size(); }
-    inline quint8            takeTank() { return _tanks.takeFirst(); }
-    void                     start();
+
+           // 重置 AI 狀態的函數
+    void reset();
+
+           // 獲取指向 Game 類實例的指針
+    inline Game *game() const { return _game; }
+
+           // 獲取待發送坦克的數量
+    inline int pendingTanks() const { return _tanks.count(); }
+
+           // 獲取 AI 生命值的數量
+    inline int lifesCount() const { return _tanks.count() + _activePlayers.size(); }
+
+           // 取出一個坦克類型
+    inline quint8 takeTank() { return _tanks.takeFirst(); }
+
+           // 啟動 AI 的函數
+    void start();
+
+           // 尋找與指定塊發生碰撞的 AI 玩家
     QSharedPointer<AIPlayer> findClash(const QSharedPointer<Block> &block);
 
+           // 獲取初始位置的函數
     QPoint initialPosition() const;
 
+           // 時間流逝的處理函數，控制 AI 的行為
     void clockTick();
 
 signals:
+    // 新玩家創建的訊號
     void newPlayer(Tanks::AIPlayer *);
 
 public slots:
 
 private slots:
+    // 停用玩家的槽函數
     void deactivatePlayer();
 
 private:
-    Game                               *_game;
-    QList<quint8>                       _tanks;
-    std::list<QSharedPointer<AIPlayer>> _activePlayers;
-    std::list<QSharedPointer<AIPlayer>> _inactivePlayers;
-    int                                 _activateClock;
+    Game                               *_game; // 指向 Game 類實例的指針
+    QList<quint8>                       _tanks; // 存儲坦克類型的列表
+    std::list<QSharedPointer<AIPlayer>> _activePlayers; // 存儲活躍的 AI 玩家
+    std::list<QSharedPointer<AIPlayer>> _inactivePlayers; // 存儲非活躍的 AI 玩家
+    int                                 _activateClock; // 控制 AI 玩家激活的計時器
 };
 
 } // namespace Tanks
